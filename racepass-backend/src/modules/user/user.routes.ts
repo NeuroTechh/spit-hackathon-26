@@ -17,7 +17,7 @@ router.put('/profile', authenticate, userController.updateProfile);
 router.put(
     '/role/:userId',
     authenticate,
-    authorize('verifier'),
+    authorize('verifier', 'admin'),
     auditLog('role_update', 'user'),
     userController.updateRole
 );

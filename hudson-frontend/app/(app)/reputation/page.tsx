@@ -37,7 +37,7 @@ export default function ReputationPage() {
     ]).then(([scoreResult, historyResult]) => {
       if (scoreResult.status === "fulfilled") setScore(scoreResult.value);
       if (historyResult.status === "fulfilled")
-        setHistory(historyResult.value.records);
+        setHistory(historyResult.value.history);
       setLoading(false);
     });
   }, []);

@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/score', authenticate, reputationController.getScore);
 router.get('/history', authenticate, reputationController.getHistory);
-router.post('/action', authenticate, authorize('organizer', 'verifier'), auditLog('reputation_action', 'reputation'), reputationController.recordAction);
+router.post('/action', authenticate, authorize('organizer', 'verifier', 'admin'), auditLog('reputation_action', 'reputation'), reputationController.recordAction);
 router.post('/publish', authenticate, auditLog('reputation_publish', 'reputation'), reputationController.publishOnChain);
 router.post('/disclose', authenticate, reputationController.selectiveDisclosure);
 

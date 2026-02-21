@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,10 +12,12 @@ import {
   Settings,
   LogOut,
   Fingerprint,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { userApi } from "@/lib/api";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -29,6 +32,11 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    userApi.getProfile().then((p) => setIsAdmin(p.role === "admin")).catch(() => {});
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -69,7 +77,16 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 space-y-1">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
+          >
+            <Shield className="h-[18px] w-[18px]" />
+            Admin Panel
+          </Link>
+        )}
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"

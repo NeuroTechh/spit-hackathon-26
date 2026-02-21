@@ -1,4 +1,5 @@
 const API_BASE = "";
+const BACKEND_DIRECT = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 type RequestOptions = {
   method?: string;
@@ -27,6 +28,22 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return res.json();
 }
 
+// File uploads bypass Next.js proxy and go straight to backend — rewrites mangle multipart bodies
+async function uploadRequest<T>(path: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${BACKEND_DIRECT}${path}`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Request failed" }));
+    throw new ApiError(res.status, error.error || "Request failed", error.details);
+  }
+
+  return res.json();
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -44,7 +61,7 @@ export type UserProfile = {
   walletAddress: string | null;
   did: string;
   displayName: string;
-  role: "user" | "organizer" | "verifier";
+  role: "user" | "organizer" | "verifier" | "admin";
   isActive: boolean;
   didDocument?: Record<string, unknown>;
   createdAt: string;
@@ -68,11 +85,23 @@ export const userApi = {
 export type VerificationInit = {
   requestId: string;
   verificationType: string;
-  providerId: string;
-  requestUrl: string;
-  statusUrl: string;
+  suggestedDocType: string;
+  acceptedDocTypes: string[];
   message: string;
-  callbackUrl: string;
+  uploadEndpoint: string;
+};
+
+export type VerificationSubmitResult = {
+  credential: Credential;
+  verifiableCredential: Record<string, unknown>;
+  onChainTxHash: string | null;
+  verificationResult: Record<string, unknown>;
+  attestation: {
+    attestationId: string;
+    attestationHash: string;
+    confidenceScore: number;
+    trustScore: number;
+  };
 };
 
 export type Verification = {
@@ -88,13 +117,30 @@ export const identityApi = {
       method: "POST",
       body: { verificationType },
     }),
-  submitCallback: (requestId: string, data: { verificationType: string; proof: unknown }) =>
-    request(`/api/v1/identity/verify/callback/${requestId}`, {
+  submitDocument: (
+    requestId: string,
+    verificationType: string,
+    docType: string,
+    file: File
+  ) => {
+    const formData = new FormData();
+    formData.append("verificationType", verificationType);
+    formData.append("docType", docType);
+    formData.append("document", file);
+    return uploadRequest<VerificationSubmitResult>(
+      `/api/v1/identity/verify/submit/${requestId}`,
+      formData
+    );
+  },
+  submitSimple: (verificationType: string, docType: string) =>
+    request<VerificationSubmitResult>("/api/v1/identity/verify/simple", {
       method: "POST",
-      body: data,
+      body: { verificationType, docType },
     }),
   getVerifications: () =>
-    request<{ verifications: Verification[] }>("/api/v1/identity/verifications"),
+    request<{ verifications: { credentials: Credential[]; attestations: unknown[]; trustScore: unknown } }>(
+      "/api/v1/identity/verifications"
+    ),
 };
 
 // ─── Credentials ────────────────────────────────────────────
@@ -132,7 +178,7 @@ export const credentialApi = {
       body: { proofType },
     }),
   verify: (credentialHash: string) =>
-    request<{ isValid: boolean; onChain: unknown }>(
+    request<{ valid: boolean; credentialHash: string; onChain: Record<string, unknown> }>(
       `/api/v1/credentials/verify/${credentialHash}`
     ),
 };
@@ -155,11 +201,12 @@ export type ReputationRecord = {
   points: number;
   description: string;
   created_at: string;
+  event_title?: string;
 };
 
 export const reputationApi = {
   getScore: () => request<ReputationScore>("/api/v1/reputation/score"),
-  getHistory: () => request<{ records: ReputationRecord[] }>("/api/v1/reputation/history"),
+  getHistory: () => request<{ history: ReputationRecord[] }>("/api/v1/reputation/history"),
   recordAction: (data: { action: string; eventId?: string; description?: string }) =>
     request("/api/v1/reputation/action", { method: "POST", body: data }),
   publishOnChain: () =>
@@ -225,16 +272,97 @@ export const eventApi = {
     request(`/api/v1/events/${eventId}/passes/${passId}/checkin`, { method: "POST" }),
 };
 
+// ─── Admin ─────────────────────────────────────────────────
+export type AdminUser = {
+  id: string;
+  walletAddress: string | null;
+  did: string;
+  displayName: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  reputationScore: number;
+};
+
+export type AdminUserDetail = AdminUser & {
+  attendanceCount: number;
+  checkinCount: number;
+  fraudCount: number;
+  noshowCount: number;
+  reputationHistory: Array<{
+    id: string;
+    action: string;
+    eventId: string | null;
+    points: number;
+    description: string;
+    createdAt: string;
+  }>;
+};
+
+export type UserReport = {
+  id: string;
+  reporter_id: string;
+  target_user_id: string;
+  reason: string;
+  severity: "low" | "medium" | "high" | "critical";
+  event_id: string | null;
+  status: "pending" | "reviewed" | "dismissed";
+  admin_notes: string | null;
+  score_adjustment: number;
+  processed_by: string | null;
+  processed_at: string | null;
+  created_at: string;
+  target_user_name?: string;
+  reporter_name?: string;
+};
+
+export type AdminStats = {
+  totalUsers: number;
+  totalEvents: number;
+  pendingReports: number;
+  averageReputation: number;
+};
+
+export const adminApi = {
+  getStats: () => request<AdminStats>("/api/v1/admin/stats"),
+  listUsers: (params?: { page?: number; limit?: number; search?: string; role?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    if (params?.search) sp.set("search", params.search);
+    if (params?.role) sp.set("role", params.role);
+    const qs = sp.toString();
+    return request<{ users: AdminUser[]; total: number; page: number; limit: number }>(
+      `/api/v1/admin/users${qs ? `?${qs}` : ""}`
+    );
+  },
+  getUser: (userId: string) => request<AdminUserDetail>(`/api/v1/admin/users/${userId}`),
+  listReports: (params?: { status?: string; page?: number; limit?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.status) sp.set("status", params.status);
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    const qs = sp.toString();
+    return request<{ reports: UserReport[]; total: number }>(
+      `/api/v1/admin/reports${qs ? `?${qs}` : ""}`
+    );
+  },
+  submitReport: (data: { targetUserId: string; reason: string; severity: string; eventId?: string }) =>
+    request<UserReport>("/api/v1/admin/reports", { method: "POST", body: data }),
+  processReport: (reportId: string, data: { decision: "apply" | "dismiss"; notes?: string }) =>
+    request<UserReport>(`/api/v1/admin/reports/${reportId}`, { method: "PUT", body: data }),
+};
+
 // ─── Public Verification ────────────────────────────────────
 export const verifyApi = {
   credential: (credentialHash: string) =>
-    request<{ isValid: boolean; onChain: unknown }>(
+    request<{ valid: boolean; credentialHash: string; onChain: Record<string, unknown> }>(
       `/api/v1/verify/credential/${credentialHash}`
     ),
   nft: (walletAddress: string, eventId: string) =>
     request<{ hasPass: boolean }>(`/api/v1/verify/nft/${walletAddress}/${eventId}`),
   reputation: (walletAddress: string) =>
     request(`/api/v1/verify/reputation/${walletAddress}`),
-  full: (data: { walletAddress: string; eventId: string; credentialHash: string }) =>
+  full: (data: { walletAddress: string; eventId?: string; credentialHash?: string; minReputationScore?: number }) =>
     request("/api/v1/verify/full", { method: "POST", body: data }),
 };

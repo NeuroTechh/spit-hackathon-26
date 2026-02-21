@@ -8,7 +8,7 @@ export interface AuthPayload {
     userId: string;
     walletAddress: string;
     did: string;
-    role: 'user' | 'organizer' | 'verifier';
+    role: 'user' | 'organizer' | 'verifier' | 'admin';
 }
 
 export interface AuthRequest extends Request {

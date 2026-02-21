@@ -33,6 +33,14 @@ async function main() {
     const eventPassNFTAddress = await eventPassNFT.getAddress();
     console.log(`  ✅ EventPassNFT deployed at: ${eventPassNFTAddress}`);
 
+    // ─── 4. Deploy AttestationRegistry ─────────────────────────
+    console.log("\n  Deploying AttestationRegistry...");
+    const AttestationRegistry = await ethers.getContractFactory("AttestationRegistry");
+    const attestationRegistry = await AttestationRegistry.deploy();
+    await attestationRegistry.waitForDeployment();
+    const attestationRegistryAddress = await attestationRegistry.getAddress();
+    console.log(`  ✅ AttestationRegistry deployed at: ${attestationRegistryAddress}`);
+
     // ─── Summary ───────────────────────────────────────────────
     console.log("\n═══════════════════════════════════════════════════════");
     console.log("  Deployment Summary");
@@ -40,6 +48,7 @@ async function main() {
     console.log(`  CREDENTIAL_REGISTRY_ADDRESS=${credentialRegistryAddress}`);
     console.log(`  REPUTATION_REGISTRY_ADDRESS=${reputationRegistryAddress}`);
     console.log(`  EVENT_PASS_NFT_ADDRESS=${eventPassNFTAddress}`);
+    console.log(`  ATTESTATION_REGISTRY_ADDRESS=${attestationRegistryAddress}`);
     console.log("═══════════════════════════════════════════════════════");
     console.log("\n  Add these addresses to your .env file!");
 }

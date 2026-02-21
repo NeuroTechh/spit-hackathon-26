@@ -12,8 +12,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [credentials, setCredentials] = useState<Credential[]>([]);
@@ -29,14 +31,25 @@ export default function DashboardPage() {
           reputationApi.getScore(),
         ]);
         if (p.status === "fulfilled") setProfile(p.value);
-        if (c.status === "fulfilled") setCredentials(c.value.credentials);
+        if (c.status === "fulfilled") {
+          setCredentials(c.value.credentials);
+          // Redirect to onboarding if user has no credentials at all
+          if (c.value.credentials.length === 0) {
+            router.replace("/onboarding");
+            return;
+          }
+        } else {
+          // If credentials fetch failed (e.g. no credentials table entry), redirect too
+          router.replace("/onboarding");
+          return;
+        }
         if (r.status === "fulfilled") setReputation(r.value);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (

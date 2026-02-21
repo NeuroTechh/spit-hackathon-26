@@ -17,6 +17,7 @@ import credentialRoutes from './modules/credential/credential.routes';
 import reputationRoutes from './modules/reputation/reputation.routes';
 import eventRoutes from './modules/event/event.routes';
 import verificationRoutes from './modules/verification/verification.routes';
+import adminRoutes from './modules/admin/admin.routes';
 
 // ─── Create Express App ─────────────────────────────────────
 
@@ -91,6 +92,7 @@ app.use('/api/v1/credentials', credentialRoutes);
 app.use('/api/v1/reputation', reputationRoutes);
 app.use('/api/v1/events', eventRoutes);
 app.use('/api/v1/verify', verificationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // ─── Health Check ────────────────────────────────────────────
 

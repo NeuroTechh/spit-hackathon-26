@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import * as identityController from './identity.controller';
 import { authenticate } from '../../middleware/auth';
 import { verifyLimiter } from '../../middleware/rateLimiter';
@@ -6,7 +7,20 @@ import { auditLog } from '../../middleware/auditLogger';
 
 const router = Router();
 
-// Initialize verification request (get Reclaim Protocol URL)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (_req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only JPEG, PNG, WebP, and PDF files are accepted'));
+        }
+    },
+});
+
+// Initialize verification request (get document upload instructions)
 router.post(
     '/verify/init',
     authenticate,
@@ -15,13 +29,23 @@ router.post(
     identityController.initVerification
 );
 
-// Process verification callback (submit proof)
+// Submit document for verification (replaces Reclaim callback)
 router.post(
-    '/verify/callback/:requestId',
+    '/verify/submit/:requestId',
     authenticate,
     verifyLimiter,
-    auditLog('identity_verification_complete', 'credential'),
-    identityController.verificationCallback
+    upload.single('document'),
+    auditLog('identity_verification_submit', 'credential'),
+    identityController.submitVerification
+);
+
+// Submit verification without file upload (random biased-high score)
+router.post(
+    '/verify/simple',
+    authenticate,
+    verifyLimiter,
+    auditLog('identity_verification_simple', 'credential'),
+    identityController.submitVerificationSimple
 );
 
 // Get user's verifications

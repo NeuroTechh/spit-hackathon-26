@@ -18,11 +18,11 @@ export const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// ─── Verification endpoints (very strict) ────────────────────
+// ─── Verification endpoints ──────────────────────────────────
 export const verifyLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10,
-    message: { error: 'Too many verification attempts, try again in an hour' },
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 100,
+    message: { error: 'Too many verification attempts, try again later' },
     standardHeaders: true,
     legacyHeaders: false,
 });

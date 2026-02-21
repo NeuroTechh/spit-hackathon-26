@@ -38,7 +38,7 @@ export const updateRole = async (req: AuthRequest, res: Response): Promise<void>
         const userId = req.params.userId as string;
         const { role } = req.body;
 
-        if (!['user', 'organizer', 'verifier'].includes(role)) {
+        if (!['user', 'organizer', 'verifier', 'admin'].includes(role)) {
             res.status(400).json({ error: 'Invalid role' });
             return;
         }

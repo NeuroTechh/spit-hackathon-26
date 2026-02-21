@@ -15,7 +15,7 @@ export default function PublicVerifyPage() {
   const params = useParams();
   const hash = params.hash as string;
   const [result, setResult] = useState<{
-    isValid: boolean;
+    valid: boolean;
     onChain: Record<string, unknown>;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function PublicVerifyPage() {
   useEffect(() => {
     verifyApi
       .credential(hash)
-      .then((data) => setResult(data as { isValid: boolean; onChain: Record<string, unknown> }))
+      .then((data) => setResult(data as { valid: boolean; onChain: Record<string, unknown> }))
       .catch(() => setError("Failed to verify credential"))
       .finally(() => setLoading(false));
   }, [hash]);
@@ -63,7 +63,7 @@ export default function PublicVerifyPage() {
           ) : result ? (
             <div className="space-y-4">
               <div className="flex flex-col items-center py-4">
-                {result.isValid ? (
+                {result.valid ? (
                   <>
                     <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-3" />
                     <p className="text-lg font-semibold text-emerald-700">

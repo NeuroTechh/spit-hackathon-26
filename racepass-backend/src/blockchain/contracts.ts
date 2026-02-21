@@ -44,6 +44,17 @@ const EVENT_PASS_NFT_ABI = [
     'function eventCounter() external view returns (uint256)',
 ];
 
+const ATTESTATION_REGISTRY_ABI = [
+    'function registerAttestation(bytes32 attestationHash, address subject, uint8 docType, uint8 confidenceScore, uint8 trustScore, uint256 validDays) external',
+    'function verifyAttestation(bytes32 attestationHash) external view returns (bool)',
+    'function revokeAttestation(bytes32 attestationHash) external',
+    'function getAttestation(bytes32 attestationHash) external view returns (tuple(bytes32 attestationHash, address attestor, address subject, uint8 docType, uint8 confidenceScore, uint8 trustScore, uint256 issuedAt, uint256 expiresAt, bool isRevoked, bool exists))',
+    'function getUserAttestations(address user) external view returns (bytes32[])',
+    'function isExpired(bytes32 attestationHash) external view returns (bool)',
+    'function isRevoked(bytes32 attestationHash) external view returns (bool)',
+    'function approvedAttestors(address) external view returns (bool)',
+];
+
 const REPUTATION_REGISTRY_ABI = [
     'function updateScore(address user, bytes32 scoreHash) external',
     'function getScoreHash(address user) external view returns (bytes32)',
@@ -75,14 +86,23 @@ export const getReputationRegistry = (useSigner = false): Contract => {
     return new Contract(address, REPUTATION_REGISTRY_ABI, providerOrSigner);
 };
 
+export const getAttestationRegistry = (useSigner = false): Contract => {
+    const address = process.env.ATTESTATION_REGISTRY_ADDRESS;
+    if (!address) throw new Error('ATTESTATION_REGISTRY_ADDRESS not configured');
+    const providerOrSigner = useSigner ? getSigner() : getProvider();
+    return new Contract(address, ATTESTATION_REGISTRY_ABI, providerOrSigner);
+};
+
 // ─── Utility ─────────────────────────────────────────────────
 
 export const isContractConfigured = (): {
     credentialRegistry: boolean;
     eventPassNFT: boolean;
     reputationRegistry: boolean;
+    attestationRegistry: boolean;
 } => ({
     credentialRegistry: !!process.env.CREDENTIAL_REGISTRY_ADDRESS,
     eventPassNFT: !!process.env.EVENT_PASS_NFT_ADDRESS,
     reputationRegistry: !!process.env.REPUTATION_REGISTRY_ADDRESS,
+    attestationRegistry: !!process.env.ATTESTATION_REGISTRY_ADDRESS,
 });

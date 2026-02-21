@@ -1,0 +1,44 @@
+{
+  "name": "racepass-backend",
+  "version": "1.0.0",
+  "description": "Blockchain-powered privacy-preserving universal identity and reputation platform",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "ts-node src/app.ts",
+    "dev:watch": "nodemon --exec ts-node src/app.ts",
+    "compile:contracts": "hardhat compile",
+    "deploy:contracts": "hardhat run scripts/deploy.ts",
+    "migrate": "ts-node src/config/migrate.ts",
+    "lint": "eslint src/ --ext .ts"
+  },
+  "dependencies": {
+    "@reclaimprotocol/js-sdk": "^2.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.4.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "uuid": "^11.0.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.19.11",
+    "@types/pg": "^8.11.10",
+    "@types/uuid": "^10.0.0",
+    "hardhat": "^2.22.0",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.0"
+  }
+}

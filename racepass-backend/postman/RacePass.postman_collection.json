@@ -1,0 +1,272 @@
+{
+    "info": {
+        "name": "RacePass API",
+        "description": "Privacy-preserving identity & reputation platform",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3001/api/v1"
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "walletAddress",
+            "value": "0x0000000000000000000000000000000000000001"
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Get Nonce",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/user/auth/nonce",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"walletAddress\": \"{{walletAddress}}\" }"
+                        }
+                    }
+                },
+                {
+                    "name": "Verify Signature",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/user/auth/verify",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"walletAddress\": \"{{walletAddress}}\", \"signature\": \"0x...\", \"nonce\": \"...\" }"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/user/profile",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Identity Verification",
+            "item": [
+                {
+                    "name": "Init Verification",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/identity/verify/init",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"verificationType\": \"age\" }"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Credentials",
+            "item": [
+                {
+                    "name": "List Credentials",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/credentials",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Generate Proof",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/credentials/proof/generate",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"proofType\": \"over_18\" }"
+                        }
+                    }
+                },
+                {
+                    "name": "Verify Credential (Public)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/credentials/verify/0x0000000000000000000000000000000000000000000000000000000000000001"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reputation",
+            "item": [
+                {
+                    "name": "Get Score",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/reputation/score",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Publish On-Chain",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/reputation/publish",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Events",
+            "item": [
+                {
+                    "name": "List Events",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/events"
+                    }
+                },
+                {
+                    "name": "Create Event",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/events",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"title\": \"Tech Conference 2024\", \"eventDate\": \"2024-12-01T10:00:00Z\", \"minAge\": 18, \"requiresKyc\": true, \"maxAttendees\": 500 }"
+                        }
+                    }
+                },
+                {
+                    "name": "Mint Pass",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/events/1/mint",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cross-Platform Verification",
+            "item": [
+                {
+                    "name": "Verify Credential",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/verify/credential/0x0000000000000000000000000000000000000000000000000000000000000001"
+                    }
+                },
+                {
+                    "name": "Verify NFT",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/verify/nft/{{walletAddress}}/1"
+                    }
+                },
+                {
+                    "name": "Full Verification",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/verify/full",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"walletAddress\": \"{{walletAddress}}\", \"credentialHash\": \"0x...\", \"eventId\": 1, \"minReputationScore\": 50 }"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:3001/health"
+                    }
+                }
+            ]
+        }
+    ]
+}

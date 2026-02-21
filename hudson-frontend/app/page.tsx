@@ -1,65 +1,127 @@
 import Image from "next/image";
+// Lucide icons (make sure you have @lucide/react installed)
+import { IdCard, ShieldCheck, GitMerge, ShoppingCart } from "lucide-react";
+
+const features = [
+  {
+    icon: <IdCard className="w-5 h-5 text-zinc-700" />,
+    title: "Reusable ID verification",
+    description:
+      "Users don’t have to scan physical ID documents or fill out forms twice. A verified digital ID is issued once and reused across all services and touchpoints, reducing friction, increasing conversion, and streamlining onboarding.",
+  },
+  {
+    icon: <ShieldCheck className="w-5 h-5 text-zinc-700" />,
+    title: "Faster and secure authentication",
+    description:
+      "Replace passwords and OTPs with verified digital IDs. That means faster access, shorter wait times, and stronger protection against SIM swaps, phishing, and spoofing.",
+  },
+  {
+    icon: <GitMerge className="w-5 h-5 text-zinc-700" />,
+    title: "Cross-domain identity unification",
+    description:
+      "Unify identity across siloed IAM systems and business units without merging databases. The same verified identity is recognized across domains, eliminating the need for re-verification.",
+  },
+  {
+    icon: <ShoppingCart className="w-5 h-5 text-zinc-700" />,
+    title: "Email Protection",
+    description:
+      "We protect your email address with a unique, randomly generated identifier. This means you can use our service without worrying about your email being exposed or misused. Your privacy is our priority.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <>
+      {/* First Section */}
+      <main className="bg-[#FAFAFA] min-h-screen flex items-center">
+        <section className="flex flex-col items-center justify-between w-full mx-auto px-6 py-12">
+          <h1 className="text-5xl font-semibold tracking-tight text-zinc-900 leading-[1.1] mb-16 max-w-5xl mx-auto">
+            Meet <span className="text-brand-blue">Hudson</span>. The Universal
+            Identity Experience.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+
+          <div className="hidden md:block w-full mb-10 max-w-xl mx-auto">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src="/info.svg"
+              alt="Hudson Identity Illustration"
+              width={1134}
+              height={692}
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </div>
+
+          <p className="text-zinc-600 leading-relaxed mb-10 max-w-xl mx-auto">
+            Verify once, use everywhere. Hudson&apos;s decentralized identity
+            platform lets users own their data with instant, privacy-preserving
+            verification.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-6 w-full max-w-xl mx-auto">
+            <button className="bg-brand-blue hover:bg-blue-700 transition-colors text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg shadow-blue-500/20">
+              Get Your Identity
+            </button>
+
+            <p className="text-xs text-zinc-400 max-w-45 leading-snug">
+              Your favorite app doesn&apos;t support us?{" "}
+              <span className="underline decoration-zinc-300 cursor-pointer hover:text-brand-blue transition-colors">
+                We&apos;ll talk to them.
+              </span>
+            </p>
+          </div>
+        </section>
       </main>
-    </div>
+
+      {/* Second Section */}
+      <main className=" py-10 flex items-center bg-[#FAFAFA]">
+        <section className="flex flex-col items-center justify-between w-full mx-auto px-6 py-12">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full max-w-5xl mx-auto mb-16">
+            <h1 className="text-5xl font-semibold tracking-tight text-zinc-900 leading-[1.1]">
+              One unified identity experience
+            </h1>
+            <button className="bg-brand-blue hover:bg-blue-700 transition-colors text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg shadow-blue-500/20">
+              Get Your Identity
+            </button>
+          </div>
+
+          {/* Grid of Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-5xl mx-auto">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="bg-[#F4F4F5] p-4 rounded-lg border border-zinc-100"
+              >
+                <div className="mb-3">{feature.icon}</div>
+                <h3 className="text-lg font-semibold tracking-tight text-zinc-900 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-zinc-600 text-sm leading-relaxed mb-3">
+                  {feature.description}
+                </p>
+                <a
+                  href="#"
+                  className="text-brand-blue hover:text-blue-700 transition-colors text-sm font-medium inline-flex items-center"
+                >
+                  Learn more{" "}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4 ml-1"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

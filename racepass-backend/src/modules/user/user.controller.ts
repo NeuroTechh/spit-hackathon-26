@@ -1,38 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import * as userService from './user.service';
-
-// POST /user/auth/nonce
-export const getNonce = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { walletAddress } = req.body;
-        if (!walletAddress) {
-            res.status(400).json({ error: 'walletAddress required' });
-            return;
-        }
-
-        const result = await userService.getNonceForWallet(walletAddress);
-        res.json(result);
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-// POST /user/auth/verify
-export const verifySignature = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { walletAddress, signature, nonce } = req.body;
-        if (!walletAddress || !signature || !nonce) {
-            res.status(400).json({ error: 'walletAddress, signature, and nonce required' });
-            return;
-        }
-
-        const result = await userService.verifyWalletSignature(walletAddress, signature, nonce);
-        res.json(result);
-    } catch (err: any) {
-        res.status(401).json({ error: err.message });
-    }
-};
 
 // GET /user/profile
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {

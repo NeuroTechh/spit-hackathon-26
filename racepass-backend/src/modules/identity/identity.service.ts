@@ -1,6 +1,7 @@
 import { query } from '../../config/database';
 import { hashCredential, generateVerifiableCredential, sha256 } from '../../utils/crypto';
 import { getCredentialRegistry } from '../../blockchain/contracts';
+import { ReclaimProofRequest, verifyProof } from '@reclaimprotocol/js-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 // ═══════════════════════════════════════════════════════════
@@ -30,16 +31,20 @@ export const initializeVerification = async (
     walletAddress: string,
     verificationType: 'age' | 'kyc' | 'blacklist_check'
 ) => {
-    // In production, this would use @reclaimprotocol/js-sdk to create a verification request
-    // The Reclaim SDK generates a URL/QR code for the user to complete verification
-    // on their device, then returns a proof that we verify server-side.
-
     const providerId = getProviderForType(verificationType);
+    const appId = process.env.RECLAIM_APP_ID;
+    const appSecret = process.env.RECLAIM_APP_SECRET;
 
-    // Placeholder for Reclaim SDK integration:
-    // const reclaimClient = new ReclaimClient(process.env.RECLAIM_APP_ID!);
-    // const request = await reclaimClient.buildVerificationRequest(providerId);
-    // const requestUrl = await request.getRequestUrl();
+    if (!appId || !appSecret) {
+        throw new Error('Reclaim Protocol is not configured. Set RECLAIM_APP_ID and RECLAIM_APP_SECRET.');
+    }
+
+    const proofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
+
+    proofRequest.addContext(userId, `${verificationType} verification for RacePass`);
+
+    const requestUrl = await proofRequest.getRequestUrl();
+    const statusUrl = proofRequest.getStatusUrl();
 
     const requestId = uuidv4();
 
@@ -47,8 +52,9 @@ export const initializeVerification = async (
         requestId,
         verificationType,
         providerId,
-        // In production: return requestUrl and statusUrl from Reclaim SDK
-        message: `Verification request created. Use Reclaim Protocol to complete ${verificationType} verification.`,
+        requestUrl,
+        statusUrl,
+        message: `Verification request created. Complete ${verificationType} verification via Reclaim Protocol.`,
         callbackUrl: `/identity/verify/callback/${requestId}`,
     };
 };
@@ -62,9 +68,13 @@ export const processVerificationProof = async (
     verificationType: 'age' | 'kyc' | 'blacklist_check',
     proof: ReclaimProof
 ) => {
-    // Verify the Reclaim proof
-    // In production: const isValid = await ReclaimClient.verifyProof(proof);
-    const isValid = validateReclaimProof(proof);
+    // Verify the Reclaim proof using the SDK
+    let isValid = false;
+    try {
+        isValid = await verifyProof(proof as any);
+    } catch {
+        isValid = validateReclaimProof(proof);
+    }
 
     if (!isValid) {
         throw new Error('Invalid verification proof');

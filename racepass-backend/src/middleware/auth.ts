@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { getSession } from '../config/redis';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+import { fromNodeHeaders } from 'better-auth/node';
+import { auth, getOrCreateRacepassUser } from '../auth';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -20,21 +15,7 @@ export interface AuthRequest extends Request {
     user?: AuthPayload;
 }
 
-// ─── Generate JWT ────────────────────────────────────────────
-
-export const generateToken = (payload: AuthPayload): string => {
-    return jwt.sign(payload, JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-    } as jwt.SignOptions);
-};
-
-export const generateRefreshToken = (payload: AuthPayload): string => {
-    return jwt.sign(payload, JWT_SECRET, {
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-    } as jwt.SignOptions);
-};
-
-// ─── Verify JWT Middleware ───────────────────────────────────
+// ─── Authenticate via Better-Auth Session ────────────────────
 
 export const authenticate = async (
     req: AuthRequest,
@@ -42,35 +23,32 @@ export const authenticate = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader?.startsWith('Bearer ')) {
+        const session = await auth.api.getSession({
+            headers: fromNodeHeaders(req.headers),
+        });
+
+        if (!session) {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
 
-        const token = authHeader.split(' ')[1];
+        // Bridge to Racepass user
+        const racepassUser = await getOrCreateRacepassUser({
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.name,
+        });
 
-        // Verify JWT
-        const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+        req.user = {
+            userId: racepassUser.id,
+            walletAddress: racepassUser.wallet_address || '',
+            did: racepassUser.did,
+            role: racepassUser.role,
+        };
 
-        // Check if session still exists in Redis (allows logout/invalidation)
-        const session = await getSession(`jwt:${decoded.userId}`);
-        if (!session) {
-            res.status(401).json({ error: 'Session expired or invalidated' });
-            return;
-        }
-
-        req.user = decoded;
         next();
     } catch (err) {
-        if (err instanceof jwt.TokenExpiredError) {
-            res.status(401).json({ error: 'Token expired' });
-            return;
-        }
-        if (err instanceof jwt.JsonWebTokenError) {
-            res.status(401).json({ error: 'Invalid token' });
-            return;
-        }
+        console.error('Authentication error:', err);
         res.status(500).json({ error: 'Authentication error' });
     }
 };
@@ -99,14 +77,26 @@ export const optionalAuth = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const authHeader = req.headers.authorization;
-        if (authHeader?.startsWith('Bearer ')) {
-            const token = authHeader.split(' ')[1];
-            const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
-            req.user = decoded;
+        const session = await auth.api.getSession({
+            headers: fromNodeHeaders(req.headers),
+        });
+
+        if (session) {
+            const racepassUser = await getOrCreateRacepassUser({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.name,
+            });
+
+            req.user = {
+                userId: racepassUser.id,
+                walletAddress: racepassUser.wallet_address || '',
+                did: racepassUser.did,
+                role: racepassUser.role,
+            };
         }
     } catch {
-        // Silently ignore invalid tokens for optional auth
+        // Silently ignore for optional auth
     }
     next();
 };

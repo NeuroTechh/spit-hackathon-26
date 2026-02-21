@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
+import { auth } from './auth';
 import { generalLimiter } from './middleware/rateLimiter';
 import { isContractConfigured } from './blockchain/contracts';
 
@@ -24,11 +26,62 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: true,
     credentials: true,
 }));
+
+// ─── Better Auth Handler (must be BEFORE express.json()) ─────
+
+app.all("/api/auth/*", toNodeHandler(auth));
+
+// ─── Body Parser & Rate Limiting ─────────────────────────────
+
 app.use(express.json({ limit: '10kb' }));
 app.use(generalLimiter);
+
+// ─── OAuth/OIDC Discovery Endpoints ─────────────────────────
+
+app.get("/.well-known/openid-configuration", async (req, res) => {
+    const baseUrl = process.env.BETTER_AUTH_URL || `http://localhost:${process.env.PORT || '3001'}`;
+    res.json({
+        issuer: baseUrl,
+        authorization_endpoint: `${baseUrl}/api/auth/oauth2/authorize`,
+        token_endpoint: `${baseUrl}/api/auth/oauth2/token`,
+        jwks_uri: `${baseUrl}/api/auth/jwks`,
+        response_types_supported: ["code"],
+        grant_types_supported: ["authorization_code", "refresh_token"],
+        code_challenge_methods_supported: ["S256"],
+        token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"],
+    });
+});
+
+app.get("/.well-known/oauth-authorization-server", async (req, res) => {
+    const baseUrl = process.env.BETTER_AUTH_URL || `http://localhost:${process.env.PORT || '3001'}`;
+    res.json({
+        issuer: baseUrl,
+        authorization_endpoint: `${baseUrl}/api/auth/oauth2/authorize`,
+        token_endpoint: `${baseUrl}/api/auth/oauth2/token`,
+        jwks_uri: `${baseUrl}/api/auth/jwks`,
+        response_types_supported: ["code"],
+        grant_types_supported: ["authorization_code", "refresh_token"],
+        code_challenge_methods_supported: ["S256"],
+        token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"],
+    });
+});
+
+// ─── Session Info Endpoint ──────────────────────────────────
+
+app.get("/me", async (req, res) => {
+    const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers),
+    });
+
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    res.json(session);
+});
 
 // ─── Mount Routes ────────────────────────────────────────────
 
@@ -101,10 +154,13 @@ const start = async () => {
     console.log(`    EventPassNFT:      ${contracts.eventPassNFT ? '✅' : '⚠️  not configured'}`);
     console.log(`    ReputationRegistry: ${contracts.reputationRegistry ? '✅' : '⚠️  not configured'}`);
 
+    console.log('  ✅ Better-Auth mounted at /api/auth/*');
+
     app.listen(PORT, () => {
         console.log('═══════════════════════════════════════════════════════');
         console.log(`  Server running on port ${PORT}`);
         console.log(`  API base: http://localhost:${PORT}/api/v1`);
+        console.log(`  Auth:     http://localhost:${PORT}/api/auth`);
         console.log('═══════════════════════════════════════════════════════');
     });
 };

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Menu, X, LogOut, User } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Ticket } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 
 export function Navbar() {
@@ -36,6 +36,15 @@ export function Navbar() {
               <Search className="w-3.5 h-3.5" />
               Search
             </button>
+            {session && (
+              <Link
+                href="/passes"
+                className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1.5"
+              >
+                <Ticket className="w-3.5 h-3.5" />
+                My Passes
+              </Link>
+            )}
 
             {isPending ? (
               <div className="h-8 w-8 rounded-full bg-zinc-100 animate-pulse" />
@@ -87,6 +96,9 @@ export function Navbar() {
           </Link>
           {session ? (
             <div className="space-y-3">
+              <Link href="/passes" className="block text-sm text-zinc-600 py-1.5">
+                My Passes
+              </Link>
               <div className="flex items-center gap-2 text-sm text-zinc-700 py-1.5">
                 <div className="h-7 w-7 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium">
                   {session.user.name?.charAt(0).toUpperCase() || "?"}

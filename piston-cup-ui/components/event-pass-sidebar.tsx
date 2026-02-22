@@ -108,6 +108,7 @@ export function EventPassSidebar({ event }: { event: RaceEvent }) {
   const isMinting = mint.status === "minting";
   const isMinted = mint.status === "success";
   const isNotRegistered = eligibility.status === "not-registered";
+  const isAlreadyOwned = eligibility.status === "already-owned";
 
   return (
     <div className="sticky top-20 space-y-4">
@@ -142,6 +143,21 @@ export function EventPassSidebar({ event }: { event: RaceEvent }) {
             </span>
           </div>
         </div>
+
+        {/* Already owns a pass */}
+        {isAlreadyOwned && (
+          <div className="mb-4 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <span className="text-sm font-semibold text-emerald-800">
+                You already have a pass
+              </span>
+            </div>
+            <p className="text-xs text-emerald-700 mt-1">
+              Your pass for this event has been minted. See you there!
+            </p>
+          </div>
+        )}
 
         {/* Not registered in backend */}
         {isNotRegistered && session && (
@@ -185,7 +201,7 @@ export function EventPassSidebar({ event }: { event: RaceEvent }) {
         )}
 
         {/* Button */}
-        {!isMinted && (
+        {!isMinted && !isAlreadyOwned && (
           <button
             onClick={handleGetPass}
             disabled={

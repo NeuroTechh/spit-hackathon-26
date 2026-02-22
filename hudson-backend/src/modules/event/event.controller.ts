@@ -41,6 +41,14 @@ export const mintPass = async (req: AuthRequest, res: Response): Promise<void> =
     } catch (err: any) { res.status(400).json({ error: err.message }); }
 };
 
+export const getMyPasses = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }
+        const passes = await eventService.getUserPasses(req.user.userId);
+        res.json({ passes });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+};
+
 export const checkIn = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }

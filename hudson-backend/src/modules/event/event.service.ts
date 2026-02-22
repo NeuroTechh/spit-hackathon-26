@@ -245,6 +245,21 @@ export const mintEventPass = async (userId: string, walletAddress: string, event
     return pass;
 };
 
+// ─── Get User Passes ──────────────────────────────────────────
+
+export const getUserPasses = async (userId: string) => {
+    const result = await query(
+        `SELECT ep.id, ep.event_id, ep.token_id, ep.mint_tx_hash, ep.is_checked_in, ep.checked_in_at, ep.created_at,
+                e.title, e.event_date, e.location, e.status as event_status
+         FROM event_passes ep
+         JOIN events e ON e.id = ep.event_id
+         WHERE ep.user_id = $1 AND NOT ep.is_burned
+         ORDER BY e.event_date ASC`,
+        [userId]
+    );
+    return result.rows;
+};
+
 // ─── Check In ─────────────────────────────────────────────────
 
 export const checkInPass = async (passId: string, organizerId: string) => {

@@ -6,7 +6,7 @@ import { createDIDDocument } from '../../utils/did';
 
 export const getUserProfile = async (userId: string) => {
     const result = await query(
-        `SELECT id, wallet_address, did, display_name, role, is_active, created_at
+        `SELECT id, wallet_address, did, display_name, role, is_active, relay_email, created_at
      FROM users WHERE id = $1`,
         [userId]
     );
@@ -23,6 +23,7 @@ export const getUserProfile = async (userId: string) => {
         displayName: user.display_name,
         role: user.role,
         isActive: user.is_active,
+        relayEmail: user.relay_email,
         didDocument: createDIDDocument(user.wallet_address, user.did),
         createdAt: user.created_at,
     };

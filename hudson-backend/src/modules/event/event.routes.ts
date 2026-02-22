@@ -8,6 +8,10 @@ const router = Router();
 
 // Public
 router.get('/', optionalAuth, eventController.listEvents);
+
+// Authenticated — must be before /:id
+router.get('/my-passes', authenticate, eventController.getMyPasses);
+
 router.get('/:id', optionalAuth, eventController.getEvent);
 
 // Authenticated

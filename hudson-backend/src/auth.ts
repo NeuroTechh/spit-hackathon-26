@@ -5,18 +5,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import { emailOTP, jwt } from "better-auth/plugins";
 import { oauthProvider } from "@better-auth/oauth-provider";
-import { Resend } from "resend";
 import { query } from "./config/database";
+import { resend, FROM_EMAIL } from "./utils/email";
 import { generateDID } from "./utils/did";
 import { v4 as uuidv4 } from "uuid";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const auth = betterAuth({
-    trustedOrigins: ["http://localhost:3000", "http://localhost:3002"],
+    trustedOrigins: ["http://localhost:3000", "http://localhost:3004", "http://localhost:3005"],
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
@@ -26,7 +24,7 @@ export const auth = betterAuth({
             expiresIn: 300, // 5 minutes
             async sendVerificationOTP({ email, otp, type }) {
                 await resend.emails.send({
-                    from: process.env.RESEND_FROM_EMAIL || "RacePass <noreply@racepass.io>",
+                    from: FROM_EMAIL,
                     to: email,
                     subject:
                         type === "sign-in"
@@ -40,8 +38,8 @@ export const auth = betterAuth({
         }),
         jwt(),
         oauthProvider({
-            loginPage: "/sign-in",
-            consentPage: "/consent",
+            loginPage: "http://localhost:3000/login",
+            consentPage: "http://localhost:3000/consent",
         }),
     ],
 });
@@ -82,11 +80,16 @@ export const getOrCreateRacepassUser = async (betterAuthUser: {
     }
 
     // Create new Racepass user linked to Better-Auth
+    // Uses ON CONFLICT to handle race conditions where concurrent requests
+    // both pass the SELECT checks and try to INSERT simultaneously.
     const userId = uuidv4();
     const nonce = require("crypto").randomBytes(32).toString("hex");
     const result = await query(
         `INSERT INTO users (id, wallet_address, did, display_name, role, nonce, better_auth_user_id)
          VALUES ($1, $2, $3, $4, 'user', $5, $6)
+         ON CONFLICT (did) DO UPDATE SET
+           better_auth_user_id = COALESCE(users.better_auth_user_id, EXCLUDED.better_auth_user_id),
+           updated_at = NOW()
          RETURNING id, wallet_address, did, display_name, role, is_active`,
         [userId, null, did, betterAuthUser.name, nonce, betterAuthUser.id]
     );

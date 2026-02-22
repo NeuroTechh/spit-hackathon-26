@@ -272,85 +272,61 @@ export const eventApi = {
     request(`/api/v1/events/${eventId}/passes/${passId}/checkin`, { method: "POST" }),
 };
 
-// ─── Admin ─────────────────────────────────────────────────
-export type AdminUser = {
+// ─── OAuth Clients ─────────────────────────────────────────
+export type OAuthClient = {
   id: string;
-  walletAddress: string | null;
-  did: string;
-  displayName: string;
-  role: string;
-  isActive: boolean;
+  clientId: string;
+  name: string;
+  disabled: boolean;
+  scopes: string[];
+  redirectUris: string[];
+  grantTypes: string[];
+  icon: string | null;
+  skipConsent: boolean;
   createdAt: string;
-  reputationScore: number;
+  updatedAt: string;
 };
 
-export type AdminUserDetail = AdminUser & {
-  attendanceCount: number;
-  checkinCount: number;
-  fraudCount: number;
-  noshowCount: number;
-  reputationHistory: Array<{
-    id: string;
-    action: string;
-    eventId: string | null;
-    points: number;
-    description: string;
-    createdAt: string;
-  }>;
+export type OAuthClientWithSecret = OAuthClient & {
+  clientSecret: string;
 };
 
-export type UserReport = {
-  id: string;
-  reporter_id: string;
-  target_user_id: string;
-  reason: string;
-  severity: "low" | "medium" | "high" | "critical";
-  event_id: string | null;
-  status: "pending" | "reviewed" | "dismissed";
-  admin_notes: string | null;
-  score_adjustment: number;
-  processed_by: string | null;
-  processed_at: string | null;
-  created_at: string;
-  target_user_name?: string;
-  reporter_name?: string;
-};
-
-export type AdminStats = {
-  totalUsers: number;
-  totalEvents: number;
-  pendingReports: number;
-  averageReputation: number;
-};
-
-export const adminApi = {
-  getStats: () => request<AdminStats>("/api/v1/admin/stats"),
-  listUsers: (params?: { page?: number; limit?: number; search?: string; role?: string }) => {
-    const sp = new URLSearchParams();
-    if (params?.page) sp.set("page", String(params.page));
-    if (params?.limit) sp.set("limit", String(params.limit));
-    if (params?.search) sp.set("search", params.search);
-    if (params?.role) sp.set("role", params.role);
-    const qs = sp.toString();
-    return request<{ users: AdminUser[]; total: number; page: number; limit: number }>(
-      `/api/v1/admin/users${qs ? `?${qs}` : ""}`
-    );
-  },
-  getUser: (userId: string) => request<AdminUserDetail>(`/api/v1/admin/users/${userId}`),
-  listReports: (params?: { status?: string; page?: number; limit?: number }) => {
-    const sp = new URLSearchParams();
-    if (params?.status) sp.set("status", params.status);
-    if (params?.page) sp.set("page", String(params.page));
-    if (params?.limit) sp.set("limit", String(params.limit));
-    const qs = sp.toString();
-    return request<{ reports: UserReport[]; total: number }>(
-      `/api/v1/admin/reports${qs ? `?${qs}` : ""}`
-    );
-  },
-  submitReport: (data: { targetUserId: string; reason: string; severity: string; eventId?: string }) =>
-    request<UserReport>("/api/v1/admin/reports", { method: "POST", body: data }),
-  processReport: (reportId: string, data: { decision: "apply" | "dismiss"; notes?: string }) =>
-    request<UserReport>(`/api/v1/admin/reports/${reportId}`, { method: "PUT", body: data }),
+export const oauthClientApi = {
+  list: () => request<OAuthClient[]>("/api/v1/oauth-clients"),
+  get: (id: string) => request<OAuthClient>(`/api/v1/oauth-clients/${id}`),
+  create: (data: {
+    name: string;
+    redirectUris: string[];
+    scopes?: string[];
+    skipConsent?: boolean;
+  }) =>
+    request<OAuthClientWithSecret>("/api/v1/oauth-clients", {
+      method: "POST",
+      body: data,
+    }),
+  update: (
+    id: string,
+    data: {
+      name?: string;
+      redirectUris?: string[];
+      scopes?: string[];
+      icon?: string;
+      disabled?: boolean;
+      skipConsent?: boolean;
+    }
+  ) =>
+    request<OAuthClient>(`/api/v1/oauth-clients/${id}`, {
+      method: "PUT",
+      body: data,
+    }),
+  remove: (id: string) =>
+    request<{ message: string }>(`/api/v1/oauth-clients/${id}`, {
+      method: "DELETE",
+    }),
+  rotateSecret: (id: string) =>
+    request<OAuthClientWithSecret>(`/api/v1/oauth-clients/${id}/rotate-secret`, {
+      method: "POST",
+    }),
 };
 
 // ─── Public Verification ────────────────────────────────────

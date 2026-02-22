@@ -71,6 +71,7 @@ export const submitVerification = async (req: AuthRequest, res: Response): Promi
 
         res.json(result);
     } catch (err: any) {
+        console.error('Error in submitVerification:', err);
         res.status(400).json({ error: err.message });
     }
 };

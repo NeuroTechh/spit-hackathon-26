@@ -22,7 +22,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       .getProfile()
       .then((profile) => {
         if (profile.role !== "admin") {
-          router.replace("/dashboard");
+          router.replace("/");
         } else {
           setAuthorized(true);
         }

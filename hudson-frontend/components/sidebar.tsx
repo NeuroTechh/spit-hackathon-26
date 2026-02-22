@@ -13,6 +13,7 @@ import {
   LogOut,
   Fingerprint,
   Shield,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Credentials", href: "/credentials", icon: ShieldCheck },
   { name: "Events", href: "/events", icon: CalendarDays },
   { name: "Reputation", href: "/reputation", icon: Star },
+  { name: "Developers", href: "/developers", icon: KeyRound },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

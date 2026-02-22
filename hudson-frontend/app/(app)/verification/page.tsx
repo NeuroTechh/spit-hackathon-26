@@ -119,9 +119,11 @@ export default function VerificationPage() {
     setSubmitting(true);
     setError("");
     try {
-      const result = await identityApi.submitSimple(
+      const result = await identityApi.submitDocument(
+        activeVerification.initData.requestId,
         activeVerification.type,
-        selectedDocType
+        selectedDocType,
+        selectedFile
       );
 
       setSuccessMessage(

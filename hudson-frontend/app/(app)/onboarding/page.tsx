@@ -82,7 +82,12 @@ export default function OnboardingPage() {
     setSubmitting(true);
     setError("");
     try {
-      await identityApi.submitSimple(type, selectedDocType);
+      await identityApi.submitDocument(
+        verificationInit!.requestId,
+        type,
+        selectedDocType,
+        selectedFile!
+      );
       setVerificationInit(null);
       setSelectedFile(null);
       setSelectedDocType("");

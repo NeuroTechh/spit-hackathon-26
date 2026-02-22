@@ -2,6 +2,7 @@ import { query } from '../../config/database';
 import { getEventPassNFT, getCredentialRegistry, getReputationRegistry } from '../../blockchain/contracts';
 import { sha256 } from '../../utils/crypto';
 import { ethers } from 'ethers';
+import { resend, FROM_EMAIL } from '../../utils/email';
 
 // ─── Create Event ────────────────────────────────────────────
 
@@ -160,34 +161,34 @@ export const mintEventPass = async (userId: string, walletAddress: string, event
         throw new Error('Event is full');
     }
 
-    // Get user's active credential hash for the NFT contract
+    // Get user's active credential hash for the NFT contract (optional for off-chain passes)
     const cred = await query(
         `SELECT credential_hash FROM credentials WHERE user_id = $1 AND status = 'active' AND expires_at > NOW() LIMIT 1`,
         [userId]
     );
 
-    if (cred.rows.length === 0) throw new Error('No active credential found');
-
-    // Mint on-chain
+    // Mint on-chain (optional — skip if event isn't registered on-chain or user has no wallet)
     let tokenId: number | null = null;
     let mintTxHash: string | null = null;
 
-    try {
-        const nftContract = getEventPassNFT(true);
-        const tx = await nftContract.mintPass(
-            walletAddress,
-            event.on_chain_event_id,
-            cred.rows[0].credential_hash
-        );
-        const receipt = await tx.wait();
-        mintTxHash = receipt.hash;
+    if (event.on_chain_event_id && walletAddress && cred.rows.length > 0) {
+        try {
+            const nftContract = getEventPassNFT(true);
+            const tx = await nftContract.mintPass(
+                walletAddress,
+                event.on_chain_event_id,
+                cred.rows[0].credential_hash
+            );
+            const receipt = await tx.wait();
+            mintTxHash = receipt.hash;
 
-        // Parse token ID from event logs
-        const mintEvent = receipt.logs?.find((log: any) => log.fragment?.name === 'PassMinted');
-        tokenId = mintEvent ? Number(mintEvent.args?.[1]) : null;
-    } catch (err: any) {
-        console.error('On-chain mint failed:', err.message);
-        throw new Error('Failed to mint pass on-chain');
+            // Parse token ID from event logs
+            const mintEvent = receipt.logs?.find((log: any) => log.fragment?.name === 'PassMinted');
+            tokenId = mintEvent ? Number(mintEvent.args?.[1]) : null;
+        } catch (err: any) {
+            console.error('On-chain mint failed:', err.message);
+            // Continue — pass will be stored off-chain
+        }
     }
 
     // Store pass in database
@@ -197,7 +198,51 @@ export const mintEventPass = async (userId: string, walletAddress: string, event
         [eventId, userId, tokenId, mintTxHash]
     );
 
-    return result.rows[0];
+    const pass = result.rows[0];
+
+    // Send confirmation email (fire-and-forget)
+    (async () => {
+        try {
+            const userRow = await query(
+                `SELECT u.email, u.name FROM "user" u
+                 JOIN users ru ON ru.better_auth_user_id = u.id
+                 WHERE ru.id = $1`,
+                [userId]
+            );
+            if (userRow.rows.length === 0) return;
+
+            const { email, name } = userRow.rows[0];
+            const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            });
+
+            await resend.emails.send({
+                from: FROM_EMAIL,
+                to: email,
+                subject: `Your pass for ${event.title} is confirmed!`,
+                html: `
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; color: #18181b;">
+                        <h1 style="font-size: 22px; font-weight: 600;">Pass Confirmed</h1>
+                        <p>Hey ${name || 'there'},</p>
+                        <p>You're all set for <strong>${event.title}</strong>!</p>
+                        <div style="background: #f4f4f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                            <p style="margin: 0 0 8px;"><strong>Event:</strong> ${event.title}</p>
+                            <p style="margin: 0 0 8px;"><strong>Date:</strong> ${eventDate}</p>
+                            <p style="margin: 0 0 8px;"><strong>Location:</strong> ${event.location || 'TBA'}</p>
+                            <p style="margin: 0 0 8px;"><strong>Pass ID:</strong> <code>${pass.id}</code></p>
+                            ${tokenId != null ? `<p style="margin: 0 0 8px;"><strong>NFT Token ID:</strong> #${tokenId}</p>` : ''}
+                            ${mintTxHash ? `<p style="margin: 0;"><strong>Transaction:</strong> <code>${mintTxHash.slice(0, 10)}...${mintTxHash.slice(-8)}</code></p>` : ''}
+                        </div>
+                        <p style="color: #71717a; font-size: 13px;">This pass is soulbound to your identity and cannot be transferred. Show this email or your pass in the app at check-in.</p>
+                    </div>
+                `,
+            });
+        } catch (err: any) {
+            console.error('Failed to send pass confirmation email:', err.message);
+        }
+    })();
+
+    return pass;
 };
 
 // ─── Check In ─────────────────────────────────────────────────

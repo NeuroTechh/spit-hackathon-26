@@ -5,14 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { RaceCard } from "@/components/race-card";
 import { events, RACE_IMAGE } from "@/data/events";
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Users,
-  ChevronLeft,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronLeft, CheckCircle2 } from "lucide-react";
+import { EventPassSidebar } from "@/components/event-pass-sidebar";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -121,71 +115,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-20 space-y-4">
-                <div className="rounded-lg border border-zinc-100 bg-white p-5">
-                  <h3 className="font-semibold text-zinc-900 text-base mb-1">
-                    Race Pass
-                  </h3>
-                  <p className="text-xs text-zinc-400 mb-5">
-                    Verified digital credential
-                  </p>
-
-                  <div className="space-y-3 mb-5">
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <Calendar className="w-4 h-4 text-zinc-400" />
-                      <span className="text-zinc-700">{event.date}</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <Clock className="w-4 h-4 text-zinc-400" />
-                      <span className="text-zinc-700">{event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <MapPin className="w-4 h-4 text-zinc-400" />
-                      <div>
-                        <p className="text-zinc-700">{event.venue}</p>
-                        <p className="text-xs text-zinc-400">
-                          {event.location}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <Users className="w-4 h-4 text-zinc-400" />
-                      <span className="text-zinc-700">
-                        {event.maxAttendees.toLocaleString()} capacity
-                      </span>
-                    </div>
-                  </div>
-
-                  <button className="w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-full hover:bg-zinc-800 transition-colors">
-                    Get Pass
-                  </button>
-                  <p className="text-center text-[11px] text-zinc-400 mt-2.5">
-                    Requires identity verification
-                  </p>
-                </div>
-
-                <div className="rounded-lg border border-zinc-100 bg-white p-5">
-                  <h4 className="font-semibold text-sm text-zinc-900 mb-3">
-                    Eligibility
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-zinc-300" />
-                      Age {event.minAge}+
-                    </div>
-                    {event.requiresKyc && (
-                      <div className="flex items-center gap-2 text-sm text-zinc-500">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-zinc-300" />
-                        KYC Verified
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-zinc-300" />
-                      Reputation {event.minReputation}+
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <EventPassSidebar event={event} />
             </div>
           </div>
         </div>

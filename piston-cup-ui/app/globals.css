@@ -17,6 +17,7 @@
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #18181B;
+  --color-brand-blue: #0063f7;
 }
 
 body {

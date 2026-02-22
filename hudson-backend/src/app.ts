@@ -18,6 +18,7 @@ import reputationRoutes from './modules/reputation/reputation.routes';
 import eventRoutes from './modules/event/event.routes';
 import verificationRoutes from './modules/verification/verification.routes';
 import adminRoutes from './modules/admin/admin.routes';
+import oauthClientRoutes from './modules/oauth-client/oauth-client.routes';
 
 // ─── Create Express App ─────────────────────────────────────
 
@@ -30,6 +31,13 @@ app.use(cors({
     origin: true,
     credentials: true,
 }));
+
+// ─── Debug: log OAuth requests ───────────────────────────────
+app.use("/api/auth/oauth2", (req, _res, next) => {
+    console.log(`[HUDSON-OAUTH] ${req.method} ${req.originalUrl}`);
+    console.log(`[HUDSON-OAUTH] cookies: ${req.headers.cookie ? "present" : "(none)"}`);
+    next();
+});
 
 // ─── Better Auth Handler (must be BEFORE express.json()) ─────
 
@@ -49,6 +57,7 @@ app.get("/.well-known/openid-configuration", async (req, res) => {
         authorization_endpoint: `${baseUrl}/api/auth/oauth2/authorize`,
         token_endpoint: `${baseUrl}/api/auth/oauth2/token`,
         jwks_uri: `${baseUrl}/api/auth/jwks`,
+        userinfo_endpoint: `${baseUrl}/api/auth/oauth2/userinfo`,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
         code_challenge_methods_supported: ["S256"],
@@ -63,6 +72,7 @@ app.get("/.well-known/oauth-authorization-server", async (req, res) => {
         authorization_endpoint: `${baseUrl}/api/auth/oauth2/authorize`,
         token_endpoint: `${baseUrl}/api/auth/oauth2/token`,
         jwks_uri: `${baseUrl}/api/auth/jwks`,
+        userinfo_endpoint: `${baseUrl}/api/auth/oauth2/userinfo`,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
         code_challenge_methods_supported: ["S256"],
@@ -93,6 +103,7 @@ app.use('/api/v1/reputation', reputationRoutes);
 app.use('/api/v1/events', eventRoutes);
 app.use('/api/v1/verify', verificationRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/oauth-clients', oauthClientRoutes);
 
 // ─── Health Check ────────────────────────────────────────────
 

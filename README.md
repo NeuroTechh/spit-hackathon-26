@@ -221,19 +221,19 @@ The identity management interface built with Next.js 16, React 19, Radix UI, and
 - **Credential Viewer** — Browse issued credentials with on-chain status
 - **Reputation Display** — Score breakdown with history
 - **Event Management** — Browse events, check eligibility, mint passes
-- **Admin Panel** — User management, event oversight, system monitoring
 - **Public Verification** — Shareable credential verification pages
 
 ### Piston Cup UI
 
-The event marketplace frontend — a consumer-facing interface for discovering and accessing events. Built with Next.js 16, Framer Motion for animations, and Tailwind CSS 4. Provides:
+The event marketplace and administration frontend — a consumer-facing interface for discovering and accessing events, plus a full admin panel for platform management. Built with Next.js 16, Framer Motion for animations, and Tailwind CSS 4. Provides:
 
 - **Event Discovery** — Browse featured races, upcoming events, and categories
 - **Event Details** — Eligibility requirements, credential checks, pass minting
 - **Onboarding Flow** — Get Verified → Earn Pass → Build Reputation → Access More
 - **Authentication** — Wallet connection for identity-gated access
+- **Admin Panel** — Platform statistics dashboard, user management with role assignment, event creation and oversight, user report review with reputation score adjustments
 
-Piston Cup consumes Hudson's identity infrastructure: it reads credentials and reputation from the backend to determine event eligibility, then mints soulbound NFT passes for qualified users.
+Piston Cup consumes Hudson's identity infrastructure: it reads credentials and reputation from the backend to determine event eligibility, then mints soulbound NFT passes for qualified users. The admin panel is co-located within Piston Cup since it manages event-facing operations — user oversight, event CRUD, and report processing — all of which are directly tied to the event lifecycle.
 
 ---
 
@@ -495,4 +495,4 @@ npx hardhat run scripts/deploy.ts --network localhost  # or --network sepolia
 
 ## License
 
-This project was built for NeurotechH--.
+This project was built for Neurotechh++.

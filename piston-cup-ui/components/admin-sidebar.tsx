@@ -35,11 +35,11 @@ export function AdminSidebar() {
       <div className="flex h-16 items-center px-6 border-b border-zinc-100">
         <Link href="/admin" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-brand-blue flex items-center justify-center">
-            <span className="text-white font-bold text-sm">H</span>
+            <span className="text-white font-bold text-sm">P</span>
           </div>
           <div>
             <span className="text-lg font-semibold tracking-tight text-zinc-900">
-              Hudson
+              Piston Cup
             </span>
             <span className="ml-1.5 text-xs font-medium text-brand-blue uppercase tracking-wider">
               Admin
@@ -74,7 +74,7 @@ export function AdminSidebar() {
 
       <div className="px-3 pb-4 space-y-1">
         <Link
-          href="/dashboard"
+          href="/"
           className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
         >
           <ArrowLeft className="h-[18px] w-[18px]" />

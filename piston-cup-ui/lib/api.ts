@@ -122,6 +122,18 @@ export type UserPass = {
   event_status: string;
 };
 
+export type EventPassAttendee = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  token_id: number | null;
+  mint_tx_hash: string | null;
+  is_checked_in: boolean;
+  checked_in_at: string | null;
+  created_at: string;
+  user_name: string;
+};
+
 export type Eligibility = {
   eligible: boolean;
   errors: string[];
@@ -158,6 +170,8 @@ export const eventApi = {
     request<EventPass>(`/api/v1/events/${eventId}/mint`, { method: "POST" }),
   checkIn: (eventId: string, passId: string) =>
     request(`/api/v1/events/${eventId}/passes/${passId}/checkin`, { method: "POST" }),
+  getEventPasses: (eventId: string) =>
+    request<{ passes: EventPassAttendee[] }>(`/api/v1/events/${eventId}/passes`),
   getMyPasses: () =>
     request<{ passes: UserPass[] }>("/api/v1/events/my-passes"),
 };

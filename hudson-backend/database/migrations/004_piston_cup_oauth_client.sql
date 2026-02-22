@@ -29,7 +29,7 @@ INSERT INTO "oauthClient" (
     false,
     true,
     ARRAY['openid', 'profile', 'email'],
-    ARRAY['http://localhost:3004/api/auth/callback/hudson'],
+    ARRAY['http://localhost:3004/api/auth/oauth2/callback/hudson'],
     ARRAY['http://localhost:3005'],
     'client_secret_post',
     ARRAY['authorization_code', 'refresh_token'],

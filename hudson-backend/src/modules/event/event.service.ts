@@ -3,6 +3,7 @@ import { getEventPassNFT, getCredentialRegistry, getReputationRegistry } from '.
 import { sha256 } from '../../utils/crypto';
 import { ethers } from 'ethers';
 import { resend, FROM_EMAIL } from '../../utils/email';
+import { recordAction } from '../reputation/reputation.service';
 
 // ─── Create Event ────────────────────────────────────────────
 
@@ -245,6 +246,22 @@ export const mintEventPass = async (userId: string, walletAddress: string, event
     return pass;
 };
 
+// ─── Get Event Passes (for organizer/admin) ─────────────────────
+
+export const getEventPasses = async (eventId: string) => {
+    const result = await query(
+        `SELECT ep.id, ep.event_id, ep.user_id, ep.token_id, ep.mint_tx_hash,
+                ep.is_checked_in, ep.checked_in_at, ep.created_at,
+                u.display_name as user_name
+         FROM event_passes ep
+         JOIN users u ON u.id = ep.user_id
+         WHERE ep.event_id = $1 AND NOT ep.is_burned
+         ORDER BY ep.created_at ASC`,
+        [eventId]
+    );
+    return result.rows;
+};
+
 // ─── Get User Passes ──────────────────────────────────────────
 
 export const getUserPasses = async (userId: string) => {
@@ -262,7 +279,7 @@ export const getUserPasses = async (userId: string) => {
 
 // ─── Check In ─────────────────────────────────────────────────
 
-export const checkInPass = async (passId: string, organizerId: string) => {
+export const checkInPass = async (passId: string, operatorId: string, operatorRole?: string) => {
     const pass = await query(
         `SELECT ep.*, e.organizer_id FROM event_passes ep
      JOIN events e ON e.id = ep.event_id
@@ -271,7 +288,8 @@ export const checkInPass = async (passId: string, organizerId: string) => {
     );
 
     if (pass.rows.length === 0) throw new Error('Pass not found');
-    if (pass.rows[0].organizer_id !== organizerId) throw new Error('Not authorized');
+    const isAdmin = operatorRole === 'admin' || operatorRole === 'verifier';
+    if (!isAdmin && pass.rows[0].organizer_id !== operatorId) throw new Error('Not authorized');
     if (pass.rows[0].is_checked_in) throw new Error('Already checked in');
     if (pass.rows[0].is_burned) throw new Error('Pass is burned');
 
@@ -290,6 +308,13 @@ export const checkInPass = async (passId: string, organizerId: string) => {
         `UPDATE event_passes SET is_checked_in = true, checked_in_at = NOW() WHERE id = $1 RETURNING *`,
         [passId]
     );
+
+    // Award reputation points for successful check-in
+    try {
+        await recordAction(pass.rows[0].user_id, 'checkin_success', pass.rows[0].event_id, 'Checked in to event');
+    } catch (err: any) {
+        console.error('Failed to record check-in reputation:', err.message);
+    }
 
     return result.rows[0];
 };

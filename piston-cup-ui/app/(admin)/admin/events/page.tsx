@@ -78,9 +78,10 @@ export default function AdminEventsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((event) => (
-            <div
+            <Link
               key={event.id}
-              className="rounded-xl border border-zinc-200 bg-white p-5 flex items-center justify-between hover:border-zinc-300 transition-colors"
+              href={`/admin/events/${event.id}`}
+              className="block rounded-xl border border-zinc-200 bg-white p-5 flex items-center justify-between hover:border-zinc-300 transition-colors"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
@@ -122,7 +123,7 @@ export default function AdminEventsPage() {
               <p className="text-xs text-zinc-400 font-mono shrink-0 ml-4">
                 {event.id.slice(0, 8)}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -18,7 +18,8 @@ router.get('/:id', optionalAuth, eventController.getEvent);
 router.get('/:id/eligibility', authenticate, eventController.checkEligibility);
 router.post('/:id/mint', authenticate, eventLimiter, auditLog('pass_mint', 'event'), eventController.mintPass);
 
-// Organizer only
+// Organizer / Admin
+router.get('/:id/passes', authenticate, authorize('organizer', 'verifier', 'admin'), eventController.getEventPasses);
 router.post('/', authenticate, authorize('organizer', 'verifier', 'admin'), eventLimiter, auditLog('event_create', 'event'), eventController.createEvent);
 router.post('/:id/passes/:passId/checkin', authenticate, authorize('organizer', 'verifier', 'admin'), auditLog('pass_checkin', 'event'), eventController.checkIn);
 

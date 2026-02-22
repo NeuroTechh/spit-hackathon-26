@@ -49,10 +49,18 @@ export const getMyPasses = async (req: AuthRequest, res: Response): Promise<void
     } catch (err: any) { res.status(500).json({ error: err.message }); }
 };
 
+export const getEventPasses = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }
+        const passes = await eventService.getEventPasses(req.params.id as string);
+        res.json({ passes });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+};
+
 export const checkIn = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }
-        const result = await eventService.checkInPass(req.params.passId as string, req.user.userId);
+        const result = await eventService.checkInPass(req.params.passId as string, req.user.userId, req.user.role);
         res.json(result);
     } catch (err: any) { res.status(400).json({ error: err.message }); }
 };

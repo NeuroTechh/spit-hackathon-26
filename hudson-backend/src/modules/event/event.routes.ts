@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as eventController from './event.controller';
 import { authenticate, authorize, optionalAuth } from '../../middleware/auth';
-import { eventLimiter } from '../../middleware/rateLimiter';
+// import { eventLimiter } from '../../middleware/rateLimiter';
 import { auditLog } from '../../middleware/auditLogger';
 
 const router = Router();
@@ -16,11 +16,11 @@ router.get('/:id', optionalAuth, eventController.getEvent);
 
 // Authenticated
 router.get('/:id/eligibility', authenticate, eventController.checkEligibility);
-router.post('/:id/mint', authenticate, eventLimiter, auditLog('pass_mint', 'event'), eventController.mintPass);
+router.post('/:id/mint', authenticate, auditLog('pass_mint', 'event'), eventController.mintPass);
 
 // Organizer / Admin
 router.get('/:id/passes', authenticate, authorize('organizer', 'verifier', 'admin'), eventController.getEventPasses);
-router.post('/', authenticate, authorize('organizer', 'verifier', 'admin'), eventLimiter, auditLog('event_create', 'event'), eventController.createEvent);
+router.post('/', authenticate, authorize('organizer', 'verifier', 'admin'), auditLog('event_create', 'event'), eventController.createEvent);
 router.post('/:id/passes/:passId/checkin', authenticate, authorize('organizer', 'verifier', 'admin'), auditLog('pass_checkin', 'event'), eventController.checkIn);
 
 export default router;

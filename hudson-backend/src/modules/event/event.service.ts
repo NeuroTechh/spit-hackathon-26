@@ -1,7 +1,5 @@
 import { query } from '../../config/database';
-import { getEventPassNFT, getCredentialRegistry, getReputationRegistry } from '../../blockchain/contracts';
-import { sha256 } from '../../utils/crypto';
-import { ethers } from 'ethers';
+import { getEventPassNFT } from '../../blockchain/contracts';
 import { resend, FROM_EMAIL } from '../../utils/email';
 import { recordAction } from '../reputation/reputation.service';
 
@@ -21,8 +19,8 @@ export const createEvent = async (
     }
 ) => {
     const result = await query(
-        `INSERT INTO events (organizer_id, title, description, event_date, location, min_age, requires_kyc, min_reputation_score, max_attendees)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO events (organizer_id, title, description, event_date, location, min_age, requires_kyc, min_reputation_score, max_attendees, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active')
      RETURNING *`,
         [
             organizerId, data.title, data.description || null,
@@ -34,37 +32,8 @@ export const createEvent = async (
 
     const event = result.rows[0];
 
-    // Register on-chain
-    try {
-        const nftContract = getEventPassNFT(true);
-        const metadataHash = ethers.id(JSON.stringify({ title: data.title, date: data.eventDate }));
-
-        const tx = await nftContract.createEvent(
-            data.title,
-            Math.floor(new Date(data.eventDate).getTime() / 1000),
-            data.minAge || 0,
-            data.requiresKyc || false,
-            data.minReputationScore || 0,
-            data.maxAttendees || 0,
-            metadataHash
-        );
-        const receipt = await tx.wait();
-
-        // Get event ID from receipt logs
-        const eventCounter = await nftContract.eventCounter();
-
-        await query(
-            `UPDATE events SET on_chain_event_id = $1, metadata_hash = $2, on_chain_tx_hash = $3, status = 'active' WHERE id = $4`,
-            [Number(eventCounter), metadataHash, receipt.hash, event.id]
-        );
-
-        event.on_chain_event_id = Number(eventCounter);
-        event.on_chain_tx_hash = receipt.hash;
-        event.status = 'active';
-    } catch (err: any) {
-        console.error('On-chain event creation failed:', err.message);
-        // Event still exists off-chain
-    }
+    // On-chain registration disabled for now (blockchain node not available)
+    // TODO: Re-enable when local chain is running
 
     return event;
 };

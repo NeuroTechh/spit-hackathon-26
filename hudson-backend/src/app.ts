@@ -9,6 +9,7 @@ import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { auth } from './auth';
 import { generalLimiter } from './middleware/rateLimiter';
 import { isContractConfigured } from './blockchain/contracts';
+import { httpLogger, logger } from './utils/logger';
 
 // ─── Import Routes ───────────────────────────────────────────
 import userRoutes from './modules/user/user.routes';
@@ -32,21 +33,18 @@ app.use(cors({
     credentials: true,
 }));
 
-// ─── Debug: log OAuth requests ───────────────────────────────
-app.use("/api/auth/oauth2", (req, _res, next) => {
-    console.log(`[HUDSON-OAUTH] ${req.method} ${req.originalUrl}`);
-    console.log(`[HUDSON-OAUTH] cookies: ${req.headers.cookie ? "present" : "(none)"}`);
-    next();
-});
+// ─── HTTP Request Logging ────────────────────────────────────
+app.use(httpLogger);
 
 // ─── Better Auth Handler (must be BEFORE express.json()) ─────
 
 app.all("/api/auth/*", toNodeHandler(auth));
 
-// ─── Body Parser & Rate Limiting ─────────────────────────────
+// ─── Body Parser ─────────────────────────────────────────────
 
 app.use(express.json({ limit: '10kb' }));
-app.use(generalLimiter);
+// Rate limiting disabled for now
+// app.use(generalLimiter);
 
 // ─── OAuth/OIDC Discovery Endpoints ─────────────────────────
 
@@ -128,7 +126,7 @@ app.use((req, res) => {
 // ─── Error Handler ───────────────────────────────────────────
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Unhandled error:', err.message);
+    logger.error(` Unhandled: ${req.method} ${req.originalUrl} — ${err.message}`);
     res.status(500).json({ error: 'Internal server error' });
 });
 

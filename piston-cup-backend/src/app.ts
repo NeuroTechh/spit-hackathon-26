@@ -8,6 +8,7 @@ dotenv.config();
 import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { auth, getHudsonAccessToken } from "./auth";
+import { httpLogger } from "./logger";
 
 const app = express();
 
@@ -18,14 +19,8 @@ app.use(cors({
     credentials: true,
 }));
 
-// ─── Debug: log all auth requests ────────────────────────────
-app.use("/api/auth", (req, _res, next) => {
-    console.log(`[AUTH] ${req.method} ${req.originalUrl}`);
-    console.log(`[AUTH] cookies: ${req.headers.cookie || "(none)"}`);
-    console.log(`[AUTH] origin: ${req.headers.origin || "(none)"}`);
-    console.log(`[AUTH] referer: ${req.headers.referer || "(none)"}`);
-    next();
-});
+// ─── HTTP Request Logging ───────────────────────────────────
+app.use(httpLogger);
 
 // ─── Better Auth Handler (must be BEFORE express.json()) ────
 app.all("/api/auth/*", toNodeHandler(auth));

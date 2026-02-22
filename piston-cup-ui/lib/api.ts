@@ -165,7 +165,7 @@ export const eventApi = {
     requiresKyc?: boolean;
     minReputationScore?: number;
     maxAttendees?: number;
-  }) => request<Event>("/api/v1/events/", { method: "POST", body: data }),
+  }) => request<Event>("/api/v1/events", { method: "POST", body: data }),
   mintPass: (eventId: string) =>
     request<EventPass>(`/api/v1/events/${eventId}/mint`, { method: "POST" }),
   checkIn: (eventId: string, passId: string) =>

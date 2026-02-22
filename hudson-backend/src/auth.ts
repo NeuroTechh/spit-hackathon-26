@@ -9,7 +9,7 @@ import { query } from "./config/database";
 import { resend, FROM_EMAIL } from "./utils/email";
 import { generateDID } from "./utils/did";
 import { v4 as uuidv4 } from "uuid";
-import { provisionRelayEmail } from "./modules/relay-email/relay-email.service";
+// import { provisionRelayEmail } from "./modules/relay-email/relay-email.service";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -107,15 +107,15 @@ export const getOrCreateRacepassUser = async (betterAuthUser: {
         }
     }
 
-    // Provision relay email if not yet assigned
-    if (!user.relay_email) {
-        try {
-            const relayEmail = await provisionRelayEmail(user.id, betterAuthUser.email);
-            user.relay_email = relayEmail;
-        } catch (err) {
-            console.error(`Failed to provision relay email for user ${user.id}:`, err);
-        }
-    }
+    // Relay email provisioning disabled for now
+    // if (!user.relay_email) {
+    //     try {
+    //         const relayEmail = await provisionRelayEmail(user.id, betterAuthUser.email);
+    //         user.relay_email = relayEmail;
+    //     } catch (err) {
+    //         console.error(`Failed to provision relay email for user ${user.id}:`, err);
+    //     }
+    // }
 
     return user;
 };

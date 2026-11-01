@@ -46,7 +46,7 @@
 │  ┌─────────────────────────────┐   ┌──────────────────────────────┐  │
 │  │  RacePass Backend :3001     │   │  Attestation Service :3002   │  │
 │  │  ─────────────────────────  │   │  ────────────────────────    │  │
-│  │  Auth · DID · Credentials   │──▶│  LLM Document Verification  │  │
+│  │  Auth · DID · Credentials   │──▶│  LLM Document Verification   │  │
 │  │  Reputation · Events · NFTs │   │  Trust Scoring · Anchoring   │  │
 │  └──────────┬──────────────────┘   └──────────────┬───────────────┘  │
 └─────────────┼─────────────────────────────────────┼──────────────────┘
